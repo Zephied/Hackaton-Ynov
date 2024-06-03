@@ -2,7 +2,9 @@ import discord
 from discord.ext import commands
 import random
 
+
 DISCORD_BOT_TOKEN = 'MTI0NzEyMzgxMzQ5NDI5MjUxMA.G3FQd_.H3d6P2xUBVJB0NhMBJqOOXy3P8NZtARIGwaQu4'
+
 
 intents = discord.Intents.default()
 intents.message_content = True  # Activer l'intent pour accéder au contenu des messages
