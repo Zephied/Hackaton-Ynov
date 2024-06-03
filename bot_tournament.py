@@ -1,10 +1,12 @@
 import discord
 from discord.ext import commands
 import random
+import json
 
+with open('config.json') as f:
+    config = json.load(f)
 
-DISCORD_BOT_TOKEN = ''
-
+BOT_TOKEN = config['DISCORD_TOKEN']
 
 intents = discord.Intents.default()
 intents.message_content = True  # Activer l'intent pour accéder au contenu des messages
@@ -77,4 +79,4 @@ async def list_commands(ctx):
     await ctx.send(help_text)
 
 
-bot.run(DISCORD_BOT_TOKEN)
+bot.run(BOT_TOKEN)
