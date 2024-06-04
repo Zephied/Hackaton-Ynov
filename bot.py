@@ -1,6 +1,7 @@
 import discord 
 import asyncio
 import json
+
 import aiohttp
 import sqlite3
 
@@ -9,6 +10,7 @@ with open('config.json') as f:
 
 conn = sqlite3.connect('database.sqlite')
 c = conn.cursor()
+
 
 BOT_TOKEN = config['DISCORD_TOKEN']
 PANDASCORE_TOKEN = config['PANDASCORE_TOKEN'] 
@@ -46,6 +48,8 @@ async def on_message(message):
             embed.add_field(name=f"`{indicator}unsetchannel`", value="Unset the channel for the specified game (admin only).", inline=False)
         await message.channel.send(embed=embed)
 
+    
+
     elif message.content.startswith(indicator + 'setchannel'):
         if not message.author.guild_permissions.administrator:
             await message.channel.send("You don't have the necessary permissions to use this command.")
@@ -82,6 +86,27 @@ async def on_message(message):
         await message.channel.send(f'Searching for {game_name}...')
         results = await search_game(game_name)
         await message.channel.send(results)
+
+    elif message.content.startswith(indicator + 'team'):
+        team_name = message.content.split(' ', 1)[1]
+        await message.channel.send(f'Searching for team {team_name}...')
+        team_info = search_team(team_name)
+        await message.channel.send(team_info)
+ 
+
+async def search_team(team_name):
+    url = f"https://api.pandascore.co/teams?search[name]={team_name}&token={PANDASCORE_TOKEN}"
+    response = requests.get(url)
+    teams = response.json()
+ 
+    if len(teams) == 0:
+        return "Aucune équipe trouvée."
+    else:
+        team_info = f"Équipes correspondant à votre recherche '{team_name}':\n"
+        for team in teams:
+            team_info += f"- {team['name']} (ID: {team['id']})\n"
+        return team_info
+
 
 async def search_game(game_name):
     url = f"https://api.pandascore.co/videogames?search[name]={game_name}&token={PANDASCORE_TOKEN}"
@@ -179,4 +204,6 @@ async def check_match_updates():
         await send_match_updates(game_name, channel)
 
     conn.close()
+    
+
 client.run(BOT_TOKEN)
