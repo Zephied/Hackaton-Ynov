@@ -14,7 +14,7 @@ BOT_TOKEN = config['DISCORD_TOKEN']
 PANDASCORE_TOKEN = config['PANDASCORE_TOKEN'] 
 
 channels = {}
-
+f = {}
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
