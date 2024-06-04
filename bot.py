@@ -35,7 +35,7 @@ async def on_message(message):
     if message.guild.id not in server_ids:
         c.execute('INSERT INTO SERVER_DATA (serverid, prefix) VALUES (?, ?)', (message.guild.id, indicator))
         conn.commit()
-    print(f'command received from {message.guild.id}.\ncommand executed by {message.author}.\ncommand executed in {message.channel}.\ncommand content: {message.content}')
+    print(f'command received from {message.guild.id}.\ncommand executed by {message.author}.\ncommand executed in {message.channel}.\ncommand content: {message.content}\n')
 
     indicator = c.execute('SELECT prefix FROM SERVER_DATA WHERE serverid = ?', (message.guild.id,)).fetchone()[0]
     if message.content.startswith(indicator + 'help'):
@@ -43,7 +43,7 @@ async def on_message(message):
         embed.add_field(name=f"`{indicator}help`", value="Display this help message.", inline=False)
         embed.add_field(name=f"`{indicator}search` **`<game name>`**", value="Search for eSport matches for the specified game.", inline=False)
         if message.author.guild_permissions.administrator:
-            embed.add_field(name=f"`{indicator}setindicator` **`<new indicator>`**", value="Change the command indicator (admin only).", inline=False)
+            embed.add_field(name=f"`{indicator}setprefix` **`<new prefix>`**", value="Change the command prefix (admin only).", inline=False)
             embed.add_field(name=f"`{indicator}setchannel`", value="Set the current channel to receive updates for the specified game (admin only).", inline=False)
             embed.add_field(name=f"`{indicator}unsetchannel`", value="Unset the channel for the specified game (admin only).", inline=False)
         await message.channel.send(embed=embed)
@@ -52,61 +52,50 @@ async def on_message(message):
 
     elif message.content.startswith(indicator + 'setchannel'):
         if not message.author.guild_permissions.administrator:
-            await message.channel.send("You don't have the necessary permissions to use this command.")
+            embed = discord.Embed(title="You don't have the necessary permissions to use this command!", color=0xFF0000)
+            await message.channel.send(embed=embed)
             return
 
         supported_games = await get_supported_games()
         view = discord.ui.View()
         view.add_item(GameSelect(supported_games))
-        await message.channel.send('Select a game to receive updates on:', view=view)
+        embed = discord.Embed(title="Select a game to receive updates on:", color=0x00F0F0)
+        await message.channel.send(embed=embed, view=view)
 
     elif message.content.startswith(indicator + 'unsetchannel'):
         if not message.author.guild_permissions.administrator:
-            await message.channel.send("You don't have the necessary permissions to use this command.")
+            embed = discord.Embed(title="You don't have the necessary permissions to use this command!", color=0xFF0000)
+            await message.channel.send(embed=embed)
             return
-        game_name = message.content.split(' ', 1)[1]
-        if game_name in channels:
-            del channels[game_name]
-            await message.channel.send(f'Unset this channel for updates on {game_name}.')
-        else:
-            await message.channel.send(f'No channel set for {game_name}.')
+        games = c.execute('SELECT game FROM GAME_DATA WHERE serverid = ? AND channelid = ?', (message.guild.id, message.channel.id)).fetchall()
+        if games == []:
+            embed = discord.Embed(title="This channel is not set to receive updates for any game.", color=0xFF0000)
+            await message.channel.send(embed=embed)
+            return
+        supported_games = await get_supported_games()
+        view = discord.ui.View()
+        view.add_item(GameUnselect(supported_games, message.guild.id, message.channel.id))
+        embed = discord.Embed(title="Select a game to stop receiving updates on:", color=0xFFF00F)
+        await message.channel.send(embed=embed, view=view)
 
-    elif message.content.startswith(indicator + 'setindicator'):
+    elif message.content.startswith(indicator + 'setprefix'):
         if not message.author.guild_permissions.administrator:
-            await message.channel.send("You don't have the necessary permissions to use this command.")
+            embed = discord.Embed(title="You don't have the necessary permissions to use this command!", color=0xFF0000)
+            await message.channel.send(embed=embed)
             return
         new_indicator = message.content.split(' ', 1)[1]
         indicator = new_indicator
         c.execute('UPDATE SERVER_DATA SET prefix = ? WHERE serverid = ?', (indicator, message.guild.id))
         conn.commit()
-        await message.channel.send(f'Command indicator changed to: {indicator}')
+        embed = discord.Embed(title=f'Command prefix changed to: {indicator}', color=0x00FF00)
+        await message.channel.send(embed=embed)
 
     elif message.content.startswith(indicator + 'search'):
         game_name = message.content.split(' ', 1)[1]
-        await message.channel.send(f'Searching for {game_name}...')
+        embed = discord.Embed(title=f'Searching for {game_name}...', color=0xF0F000)
+        await message.channel.send(embed=embed)
         results = await search_game(game_name)
         await message.channel.send(results)
-
-    elif message.content.startswith(indicator + 'team'):
-        team_name = message.content.split(' ', 1)[1]
-        await message.channel.send(f'Searching for team {team_name}...')
-        team_info = search_team(team_name)
-        await message.channel.send(team_info)
- 
-
-async def search_team(team_name):
-    url = f"https://api.pandascore.co/teams?search[name]={team_name}&token={PANDASCORE_TOKEN}"
-    response = requests.get(url)
-    teams = response.json()
- 
-    if len(teams) == 0:
-        return "Aucune équipe trouvée."
-    else:
-        team_info = f"Équipes correspondant à votre recherche '{team_name}':\n"
-        for team in teams:
-            team_info += f"- {team['name']} (ID: {team['id']})\n"
-        return team_info
-
 
 async def search_game(game_name):
     url = f"https://api.pandascore.co/videogames?search[name]={game_name}&token={PANDASCORE_TOKEN}"
@@ -135,6 +124,35 @@ async def get_supported_games():
             games = await response.json()
     return [game['name'] for game in games]
 
+class GameUnselect(discord.ui.Select):
+    def __init__(self, games, server_id, channel_id):
+        games = c.execute('SELECT game FROM GAME_DATA WHERE serverid = ? AND channelid = ?', (server_id, channel_id)).fetchall()
+        options = [
+            discord.SelectOption(label=game[0], value=game[0])
+            for game in games
+        ]
+
+        super().__init__(placeholder='Select a game...', min_values=1, max_values=1, options=options)
+        self.server_id = server_id
+        self.channel_id = channel_id
+
+    async def callback(self, interaction: discord.Interaction):
+        game_name = self.values[0]
+        server_id = interaction.guild.id
+        channel_id = interaction.channel.id
+
+        conn = sqlite3.connect('database.sqlite')
+        c = conn.cursor()
+
+        c.execute('DELETE FROM GAME_DATA WHERE serverid = ? AND channelid = ? AND game = ?', (server_id, channel_id, game_name))
+
+        conn.commit()
+        conn.close()
+
+        embed = discord.Embed(title=f'Unset this channel for updates on {game_name}.', color=0x00FF00)
+        await interaction.channel.send(embed=embed)
+        client.loop.create_task(send_match_updates(game_name, interaction.channel.id))
+
 class GameSelect(discord.ui.Select):
     def __init__(self, games):
         options = [discord.SelectOption(label=game, value=game) for game in games]
@@ -153,7 +171,8 @@ class GameSelect(discord.ui.Select):
         conn.commit()
         conn.close()
 
-        await interaction.response.send_message(f'Set this channel for updates on {game_name}.')
+        embed = discord.Embed(title=f'Set this channel for updates on {game_name}.', color=0x00FF00)
+        await interaction.channel.send(embed=embed)
         client.loop.create_task(send_match_updates(game_name, interaction.channel.id))
 
 async def get_match_info(game_name):
@@ -188,7 +207,7 @@ async def send_match_updates(game_name, channel_id):
                     view = discord.ui.View()
                     view.add_item(VoteButton(label=f"{team1} (0 votes)"))
                     view.add_item(VoteButton(label=f"{team2} (0 votes)"))
-                    await channel.send(embed=embed, view=view)
+                    await channel.send(embed=embed)
         await asyncio.sleep(60)
 
 async def check_match_updates():
