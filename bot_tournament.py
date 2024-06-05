@@ -96,7 +96,7 @@ async def round_swiss(ctx):
             return
 
         match_results[match] = (team1_score, team2_score)
-        # Mise à jour des scores des équipes
+     
         if team1_score > team2_score:
             teams[match[0]]['scores']['suisse'] += 1
         elif team2_score > team1_score:
@@ -112,40 +112,70 @@ async def double_elimination(ctx):
     bracket = {"winners": team_names[:], "losers": []}
     round_number = 1
 
-    while len(bracket["winners"]) > 1 and len(bracket["losers"]) > 1:
+    while len(bracket["winners"]) > 1 or len(bracket["losers"]) > 1:
         await ctx.send(f"**Round {round_number}** :")
         round_number += 1
 
-        winners_matches = [(bracket["winners"][i], bracket["winners"][i + 1]) for i in range(0, len(bracket["winners"]), 2)]
-        winners_results = await play_matches(ctx, winners_matches, 'double_elimination')
+       
+        if len(bracket["winners"]) > 1:
+            winners_matches = [(bracket["winners"][i], bracket["winners"][i + 1]) for i in range(0, len(bracket["winners"]) - 1, 2)]
+            if len(bracket["winners"]) % 2 == 1:
+                winners_matches.append((bracket["winners"][-1], None))
+            winners_results = await play_matches(ctx, winners_matches, 'double_elimination')
 
-        bracket["winners"] = []
-        for match, result in winners_results.items():
-            if result[0] > result[1]:
-                bracket["winners"].append(match[0])
-                bracket["losers"].append(match[1])
-            else:
-                bracket["winners"].append(match[1])
-                bracket["losers"].append(match[0])
+            new_winners = []
+            for match, result in winners_results.items():
+                if match[1] is None:  
+                    new_winners.append(match[0])
+                elif result[0] > result[1]:
+                    new_winners.append(match[0])
+                    bracket["losers"].append(match[1])
+                else:
+                    new_winners.append(match[1])
+                    bracket["losers"].append(match[0])
+            bracket["winners"] = new_winners
 
+      
         if len(bracket["losers"]) > 1:
-            losers_matches = [(bracket["losers"][i], bracket["losers"][i + 1]) for i in range(0, len(bracket["losers"]), 2)]
+            losers_matches = [(bracket["losers"][i], bracket["losers"][i + 1]) for i in range(0, len(bracket["losers"]) - 1, 2)]
+            if len(bracket["losers"]) % 2 == 1:
+                losers_matches.append((bracket["losers"][-1], None))
             losers_results = await play_matches(ctx, losers_matches, 'double_elimination')
 
             new_losers = []
             for match, result in losers_results.items():
-                if result[0] > result[1]:
+                if match[1] is None:  
+                    new_losers.append(match[0])
+                elif result[0] > result[1]:
                     new_losers.append(match[0])
                 else:
                     new_losers.append(match[1])
             bracket["losers"] = new_losers
 
-    await ctx.send(f"**Le tournoi est terminé. Le gagnant est {bracket['winners'][0]}.**")
-    
+        if len(bracket["winners"]) == 1 and len(bracket["losers"]) == 1:
+            # Final match between the last winner and the last loser
+            final_match = (bracket["winners"][0], bracket["losers"][0])
+            final_result = await play_matches(ctx, [final_match], 'double_elimination')
+            if final_result[final_match][0] > final_result[final_match][1]:
+                await ctx.send(f"**Le tournoi est terminé. Le gagnant est {final_match[0]}.**")
+            else:
+                await ctx.send(f"**Le tournoi est terminé. Le gagnant est {final_match[1]}.**")
+            return
+
+    if len(bracket["winners"]) == 1:
+        await ctx.send(f"**Le tournoi est terminé. Le gagnant est {bracket['winners'][0]}.**")
+    elif len(bracket["losers"]) == 1:
+        await ctx.send(f"**Le tournoi est terminé. Le gagnant est {bracket['losers'][0]}.**")
 
 async def play_matches(ctx, matches, tournament_type):
     match_results = {}
     for match in matches:
+        if match[1] is None:
+            await ctx.send(f"**{match[0]} a un bye et avance automatiquement au tour suivant.**")
+            match_results[match] = (1, 0)  
+            teams[match[0]]['scores'][tournament_type] += 1
+            continue
+        
         await ctx.send(f"**Match : {match[0]} vs {match[1]}**\nVeuillez saisir le score pour chaque équipe (séparé par un espace) :")
         result = await bot.wait_for('message', check=lambda message: message.author == ctx.author)
         scores = result.content.split()
