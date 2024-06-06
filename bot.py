@@ -30,7 +30,7 @@ async def on_message(message):
 
     server_ids = [row[0] for row in c.execute('SELECT serverid FROM SERVER_DATA').fetchall()]
     if message.guild.id not in server_ids:
-        c.execute('INSERT INTO SERVER_DATA (serverid, prefix) VALUES (?, ?)', (message.guild.id, prefix))
+        c.execute('INSERT INTO SERVER_DATA (serverid, prefix) VALUES (?, ?)', (message.guild.id, '>'))
         conn.commit()
 
     prefix = c.execute('SELECT prefix FROM SERVER_DATA WHERE serverid = ?', (message.guild.id,)).fetchone()[0]
