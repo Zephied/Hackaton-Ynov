@@ -2,8 +2,6 @@ import discord
 from discord.ext import commands
 import random
 import json
-import matplotlib.pyplot as plt
-import networkx as nx
 import math
 
 # Charger le token du bot depuis le fichier de configuration
@@ -136,6 +134,22 @@ async def show_ranking(ctx, tournament_type: str):
     
     await ctx.send(f"**Classement des équipes pour le tournoi {tournament_type}**:\n{ranking_text}")
 
+async def display_double_elimination_tree(ctx):
+    winners_bracket = []
+    losers_bracket = []
+
+    for match in match_history:
+        if match['bracket'] == 'winners':
+            winners_bracket.append(f"{match['team1']} vs {match['team2']} - {match['team1_score']}:{match['team2_score']}")
+        elif match['bracket'] == 'losers':
+            losers_bracket.append(f"{match['team1']} vs {match['team2']} - {match['team1_score']}:{match['team2_score']}")
+
+    winners_bracket_text = "\n".join(winners_bracket)
+    losers_bracket_text = "\n".join(losers_bracket)
+
+    await ctx.send("**Arbre de résultat - Tableau des vainqueurs :**\n" + winners_bracket_text)
+    await ctx.send("**Arbre de résultat - Tableau des perdants :**\n" + losers_bracket_text)
+
 async def double_elimination(ctx):
     team_names = list(teams.keys())
     bracket = {"winners": team_names[:], "losers": []}
@@ -185,15 +199,12 @@ async def double_elimination(ctx):
             final_match = (bracket["winners"][0], bracket["losers"][0])
             final_result = await play_matches(ctx, [final_match], 'double_elimination')
             record_match_results(final_result, 'final')
-
             if final_result[final_match][0] > final_result[final_match][1]:
-                await ctx.send(f"**Le tournoi est terminé. Le gagnant est {final_match[0]}.**")
-            else:
-                await ctx.send(f"**Le tournoi est terminé. Le gagnant est {final_match[1]}.**")
+              await ctx.send(f"**Le tournoi est terminé. Le gagnant est {final_match[0]}.**")
+    else:
+        await ctx.send(f"**Le tournoi est terminé. Le gagnant est {final_match[1]}.**")
 
-            break
-
-    await generate_tournament_tree(ctx)
+    await display_double_elimination_tree(ctx)
 
 async def play_matches(ctx, matches, tournament_type):
     match_results = {}
@@ -239,33 +250,6 @@ def record_match_results(results, bracket_type):
             'team2_score': result[1],
             'bracket': bracket_type
         })
-
-async def generate_tournament_tree(ctx):
-    global match_history
-    G = nx.DiGraph()
-
-    for match in match_history:
-        team1 = match['team1']
-        team2 = match['team2']
-        score1 = match['team1_score']
-        score2 = match['team2_score']
-        winner = team1 if score1 > score2 else team2
-
-        G.add_edge(team1, winner, label=f"{score1}-{score2}")
-        if team2:
-            G.add_edge(team2, winner, label=f"{score2}-{score1}")
-
-    pos = nx.spring_layout(G)
-    edge_labels = nx.get_edge_attributes(G, 'label')
-    plt.figure(figsize=(12, 8))
-    nx.draw(G, pos, with_labels=True, node_size=3000, node_color='skyblue', font_size=10, font_color='black', arrows=True)
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
-
-    plt.title('Arbre de Tournoi')
-    plt.savefig('tournament_tree.png')
-    plt.close()
-
-    await ctx.send(file=discord.File('tournament_tree.png'))
 
 @bot.command(name='commands')
 async def list_commands(ctx):
