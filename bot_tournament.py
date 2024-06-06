@@ -2,6 +2,9 @@ import discord
 from discord.ext import commands
 import random
 import json
+import matplotlib.pyplot as plt
+import networkx as nx
+import math
 
 # Charger le token du bot depuis le fichier de configuration
 with open('config.json') as f:
@@ -16,6 +19,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 teams = {}
 max_teams = 16
+match_history = []
 
 # Commande pour inscrire une équipe
 @bot.command()
@@ -70,42 +74,67 @@ async def start_tournament(ctx, tournament_type: str):
     else:
         await ctx.send("**Type de tournoi non reconnu. Utilisez `suisse` ou `double_elimination`.**")
 
+def generate_round_matches_swiss(team_names, previous_rounds):
+    num_teams = len(team_names)
+    matches = []
+    attempted_pairs = set(previous_rounds)
+
+    for i in range(num_teams):
+        for j in range(i + 1, num_teams):
+            pair = (team_names[i], team_names[j])
+            if pair not in attempted_pairs:
+                matches.append(pair)
+                attempted_pairs.add(pair)
+    return matches
+
 async def round_swiss(ctx):
     team_names = list(teams.keys())
     random.shuffle(team_names)
+
+    previous_rounds = []
 
     if len(team_names) % 2 != 0:
         bye_team = team_names.pop()
         await ctx.send(f"**{bye_team} a un bye ce tour-ci.**")
 
-    round_matches = [(team_names[i], team_names[i + 1]) for i in range(0, len(team_names), 2)]
+    num_teams = len(team_names)
+    num_rounds = math.ceil(math.log2(num_teams))
 
     match_results = {}
-    for match in round_matches:
-        await ctx.send(f"**Match : {match[0]} vs {match[1]}**\nVeuillez saisir le score pour chaque équipe (séparé par un espace) :")
-        result = await bot.wait_for('message', check=lambda message: message.author == ctx.author)
-        scores = result.content.split()
-        if len(scores) != 2:
-            await ctx.send("**Veuillez saisir deux scores.**")
-            return
-        try:
-            team1_score = int(scores[0])
-            team2_score = int(scores[1])
-        except ValueError:
-            await ctx.send("**Veuillez saisir des nombres entiers pour les scores.**")
-            return
+    for round_number in range(num_rounds):
+        await ctx.send(f"**Round {round_number + 1} :**")
+        round_matches = generate_round_matches_swiss(team_names, previous_rounds)
 
-        match_results[match] = (team1_score, team2_score)
-     
-        if team1_score > team2_score:
-            teams[match[0]]['scores']['suisse'] += 1
-        elif team2_score > team1_score:
-            teams[match[1]]['scores']['suisse'] += 1
-        else:
-            teams[match[0]]['scores']['suisse'] += 0.5
-            teams[match[1]]['scores']['suisse'] += 0.5
+        if not round_matches:
+            await ctx.send("**Plus de matchs possibles pour ce round.**")
+            break
 
-    await ctx.send("**Les résultats du tour sont enregistrés.**")
+        results = await play_matches(ctx, round_matches, 'suisse')
+
+        # Enregistrement des résultats
+        for match, result in results.items():
+            match_results[match] = result
+            if result[0] > result[1]:
+                teams[match[0]]['scores']['suisse'] += 1
+            elif result[1] > result[0]:
+                teams[match[1]]['scores']['suisse'] += 1
+            else:
+                teams[match[0]]['scores']['suisse'] += 0.5
+                teams[match[1]]['scores']['suisse'] += 0.5
+
+        previous_rounds.extend(round_matches)
+        await ctx.send("**Les résultats du tour sont enregistrés.**")
+
+        team_names = [team for team, _ in sorted(teams.items(), key=lambda x: x[1]['scores']['suisse'], reverse=True)]
+
+    await show_ranking(ctx, 'suisse')
+    return match_results
+
+async def show_ranking(ctx, tournament_type: str):
+    sorted_teams = sorted(teams.items(), key=lambda item: item[1]['scores'][tournament_type], reverse=True)
+    ranking_text = "\n".join([f"**{index + 1}. {team} - {data['scores'][tournament_type]} points**" for index, (team, data) in enumerate(sorted_teams)])
+    
+    await ctx.send(f"**Classement des équipes pour le tournoi {tournament_type}**:\n{ranking_text}")
 
 async def double_elimination(ctx):
     team_names = list(teams.keys())
@@ -116,16 +145,16 @@ async def double_elimination(ctx):
         await ctx.send(f"**Round {round_number}** :")
         round_number += 1
 
-       
         if len(bracket["winners"]) > 1:
             winners_matches = [(bracket["winners"][i], bracket["winners"][i + 1]) for i in range(0, len(bracket["winners"]) - 1, 2)]
             if len(bracket["winners"]) % 2 == 1:
                 winners_matches.append((bracket["winners"][-1], None))
             winners_results = await play_matches(ctx, winners_matches, 'double_elimination')
+            record_match_results(winners_results, 'winners')
 
             new_winners = []
             for match, result in winners_results.items():
-                if match[1] is None:  
+                if match[1] is None:
                     new_winners.append(match[0])
                 elif result[0] > result[1]:
                     new_winners.append(match[0])
@@ -135,16 +164,16 @@ async def double_elimination(ctx):
                     bracket["losers"].append(match[0])
             bracket["winners"] = new_winners
 
-      
         if len(bracket["losers"]) > 1:
             losers_matches = [(bracket["losers"][i], bracket["losers"][i + 1]) for i in range(0, len(bracket["losers"]) - 1, 2)]
             if len(bracket["losers"]) % 2 == 1:
                 losers_matches.append((bracket["losers"][-1], None))
             losers_results = await play_matches(ctx, losers_matches, 'double_elimination')
+            record_match_results(losers_results, 'losers')
 
             new_losers = []
             for match, result in losers_results.items():
-                if match[1] is None:  
+                if match[1] is None:
                     new_losers.append(match[0])
                 elif result[0] > result[1]:
                     new_losers.append(match[0])
@@ -153,41 +182,42 @@ async def double_elimination(ctx):
             bracket["losers"] = new_losers
 
         if len(bracket["winners"]) == 1 and len(bracket["losers"]) == 1:
-            # Final match between the last winner and the last loser
             final_match = (bracket["winners"][0], bracket["losers"][0])
             final_result = await play_matches(ctx, [final_match], 'double_elimination')
+            record_match_results(final_result, 'final')
+
             if final_result[final_match][0] > final_result[final_match][1]:
                 await ctx.send(f"**Le tournoi est terminé. Le gagnant est {final_match[0]}.**")
             else:
                 await ctx.send(f"**Le tournoi est terminé. Le gagnant est {final_match[1]}.**")
-            return
 
-    if len(bracket["winners"]) == 1:
-        await ctx.send(f"**Le tournoi est terminé. Le gagnant est {bracket['winners'][0]}.**")
-    elif len(bracket["losers"]) == 1:
-        await ctx.send(f"**Le tournoi est terminé. Le gagnant est {bracket['losers'][0]}.**")
+            break
+
+    await generate_tournament_tree(ctx)
 
 async def play_matches(ctx, matches, tournament_type):
     match_results = {}
     for match in matches:
         if match[1] is None:
             await ctx.send(f"**{match[0]} a un bye et avance automatiquement au tour suivant.**")
-            match_results[match] = (1, 0)  
+            match_results[match] = (1, 0)
             teams[match[0]]['scores'][tournament_type] += 1
             continue
         
         await ctx.send(f"**Match : {match[0]} vs {match[1]}**\nVeuillez saisir le score pour chaque équipe (séparé par un espace) :")
-        result = await bot.wait_for('message', check=lambda message: message.author == ctx.author)
-        scores = result.content.split()
-        if len(scores) != 2:
-            await ctx.send("**Veuillez saisir deux scores.**")
-            return
-        try:
-            team1_score = int(scores[0])
-            team2_score = int(scores[1])
-        except ValueError:
-            await ctx.send("**Veuillez saisir des nombres entiers pour les scores.**")
-            return
+        
+        while True:
+            result = await bot.wait_for('message', check=lambda message: message.author == ctx.author)
+            scores = result.content.split()
+            if len(scores) != 2:
+                await ctx.send("**Veuillez saisir deux scores.**")
+                continue
+            try:
+                team1_score = int(scores[0])
+                team2_score = int(scores[1])
+                break
+            except ValueError:
+                await ctx.send("**Veuillez saisir des nombres entiers pour les scores.**")
 
         match_results[match] = (team1_score, team2_score)
         if team1_score > team2_score:
@@ -199,6 +229,44 @@ async def play_matches(ctx, matches, tournament_type):
             teams[match[1]]['scores'][tournament_type] += 0.5
     return match_results
 
+def record_match_results(results, bracket_type):
+    global match_history
+    for match, result in results.items():
+        match_history.append({
+            'team1': match[0],
+            'team2': match[1],
+            'team1_score': result[0],
+            'team2_score': result[1],
+            'bracket': bracket_type
+        })
+
+async def generate_tournament_tree(ctx):
+    global match_history
+    G = nx.DiGraph()
+
+    for match in match_history:
+        team1 = match['team1']
+        team2 = match['team2']
+        score1 = match['team1_score']
+        score2 = match['team2_score']
+        winner = team1 if score1 > score2 else team2
+
+        G.add_edge(team1, winner, label=f"{score1}-{score2}")
+        if team2:
+            G.add_edge(team2, winner, label=f"{score2}-{score1}")
+
+    pos = nx.spring_layout(G)
+    edge_labels = nx.get_edge_attributes(G, 'label')
+    plt.figure(figsize=(12, 8))
+    nx.draw(G, pos, with_labels=True, node_size=3000, node_color='skyblue', font_size=10, font_color='black', arrows=True)
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+
+    plt.title('Arbre de Tournoi')
+    plt.savefig('tournament_tree.png')
+    plt.close()
+
+    await ctx.send(file=discord.File('tournament_tree.png'))
+
 @bot.command(name='commands')
 async def list_commands(ctx):
     help_text = """
@@ -206,7 +274,8 @@ async def list_commands(ctx):
     `!register <nom_équipe> <joueur1> <joueur2> ...` : Inscrire une nouvelle équipe avec des joueurs.
     `!team_list all` : Afficher la liste des équipes inscrites.
     `!team_list members <nom_équipe>` : Afficher les membres d'une équipe spécifiée.
-    `!start_tournament suisse/double_elimination` : Lancer le tournoi avec le type de tournoi spécifié.
+    `!start_tournament double_elimination` : Lancer un tournois à double élimination.
+    `!start_tournament suisse` : Lancer un tournoi à round suisse.
     `!ranking suisse/double_elimination` : Afficher le classement des équipes pour le type de tournoi spécifié.
     `!commands` : Afficher cette aide.
     """
