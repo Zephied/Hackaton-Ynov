@@ -42,6 +42,10 @@ async def on_message(message):
         embed = discord.Embed(title="Commands", color=0xFF00FF)
         embed.add_field(name=f"`{indicator}help`", value="Display this help message.", inline=False)
         embed.add_field(name=f"`{indicator}search` **`<game name>`**", value="Search for eSport matches for the specified game.", inline=False)
+        embed.add_field(name=f"`{indicator}player` **`<team name>`**", value="Search for esport teams for the specified player name.", inline=False)
+        embed.add_field(name=f"`{indicator}player` **`<player name>`**", value="Search for esport players for the specified player name.", inline=False)
+
+
         if message.author.guild_permissions.administrator:
             embed.add_field(name=f"`{indicator}setprefix` **`<new prefix>`**", value="Change the command prefix (admin only).", inline=False)
             embed.add_field(name=f"`{indicator}setchannel`", value="Set the current channel to receive updates for the specified game (admin only).", inline=False)
