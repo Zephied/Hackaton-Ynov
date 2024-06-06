@@ -104,6 +104,13 @@ async def on_message(message):
         team_info = search_team(team_name)
         await message.channel.send(team_info)
 
+    elif message.content.startswith(indicator + 'player'):
+        player_name = message.content.split(' ', 1)[1]
+        await message.channel.send(f'Recherche du joueur {player_name}...')
+        player_info = await search_player(player_name)
+        await message.channel.send(player_info)
+
+
 async def search_game(game_name):
     url = f"https://api.pandascore.co/videogames?search[name]={game_name}&token={PANDASCORE_TOKEN}"
     async with aiohttp.ClientSession() as session:
@@ -243,6 +250,21 @@ def search_team(team_name):
         for team in teams:
             team_info += f"- {team['name']} (ID: {team['id']})\n"
         return team_info
+    
+async def search_player(player_name):
+    url = f"https://api.pandascore.co/players?search[name]={player_name}&token={PANDASCORE_TOKEN}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            players = await response.json()
+
+    if len(players) == 0:
+        return "Aucun joueur trouvé."
+    else:
+        player_info = f"Joueurs correspondant à votre recherche '{player_name}':\n"
+        for player in players:
+            player_info += f"- {player['name']} (ID: {player['id']})\n"
+        return player_info
+
     
 
 client.run(BOT_TOKEN)
