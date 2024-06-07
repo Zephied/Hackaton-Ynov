@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="bot.jpg" alt="Your image alt text" width="300">
+</p>
+
 # Discord Bot
 <a name="readme-top"></a>
 
