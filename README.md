@@ -89,8 +89,8 @@ python bot.p
 >on_ready: **Confirms bot connection to Discord.**
 on_message: **Handles incoming messages and executes corresponding commands.**
 
-> [!IMPORTANT]
-
+> [!NOTE]
+>1. Request access to be added as a collaborator.
 ## Commands Implementation :
 
 >help: 
