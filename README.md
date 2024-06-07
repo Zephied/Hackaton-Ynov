@@ -78,9 +78,14 @@ player :
 
 **_Admin Commands_**
 
-<prefix>setprefix <new prefix>: **Change the command prefix (admin only).**
-<prefix>setchannel: **Set the current channel to receive updates for a specified game (admin only).**
-<prefix>unsetchannel: **Unset the channel for a specified game (admin only).**
+setprefix: 
+>**Change the command prefix (admin only).**
+
+setchannel: 
+>**Set the current channel to receive updates for a specified game (admin only).**
+
+unsetchannel: 
+>**Unset the channel for a specified game (admin only).**
 
 <p align="right">(<a href="#readme-top"><strong>Back to top</strong></a>)</p>
 
