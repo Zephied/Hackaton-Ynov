@@ -3,12 +3,19 @@
 ## Description
 This Discord bot provides information on eSports matches, teams, and players using the PandaScore API. It supports commands for searching games, teams, and players, setting/unsetting channels to receive game updates, and changing command prefixes.
 
-Prerequisites
+### Prerequisites
 Python 3.6+
 discord.py
 aiohttp
 requests
 sqlite3
+
+* [![Python][Python]][Python-url]
+* [![Discord][Discord]][Discord-url]
+* [![aiohttp][aiohttp]][aiohttp-url]
+* [![requests][requests]][requests-url]
+* [![sqlite3][sqlite3]][sqlite3-url]
+
 
 ### Setup
 
@@ -125,3 +132,21 @@ VoteButton: **Button for voting on match predictions.**
 
 **Make sure the bot has the necessary permissions in your Discord server, especially for reading messages, sending messages, and managing channels.
 Ensure that your config.json file contains valid tokens for the Discord bot and PandaScore API.**
+
+
+
+[Python]: https://img.shields.io/badge/Python-grey?style=for-the-badge&logo=python&logoColor=blue
+[Python-url]: https://www.python.org/
+
+[Discord]: https://img.shields.io/badge/Discord-black?style=for-the-badge&logo=discord&logoColor=lightgrey
+[Discord-url]: https://discord.com/
+
+[aiohttp]: https://img.shields.io/badge/aiohttp-grey?style=for-the-badge&logo=aiohttp&logoColor=white
+[aiohttp-url]: https://docs.aiohttp.org/en/stable/
+
+
+[requests]: https://img.shields.io/badge/Requests-grey?style=for-the-badge&logo=python&logoColor=yellow
+[requests-url]: https://www.javascript.com/
+
+[sqlite3]: https://img.shields.io/badge/SQLite-grey?style=for-the-badge&logo=sqlite&logoColor=blue
+[sqlite3-url]: https://www.sqlite.org/index.html
