@@ -60,9 +60,9 @@ _sh_
 python bot.p
 ```
 > [!NOTE]
->1.### Commands
+>1.**Commands**
 
-**General Commands**
+**_General Commands_**
 
 <prefix>help: **Display the help message with all available commands.**
 <prefix>search <game name>: **Search for eSport matches for the specified game.**
@@ -70,7 +70,7 @@ python bot.p
 <prefix>player <player name>: **Search for eSport players for the specified player name.**
 
 
-**Admin Commands**
+**_Admin Commands_**
 
 <prefix>setprefix <new prefix>: **Change the command prefix (admin only).**
 <prefix>setchannel: **Set the current channel to receive updates for a specified game (admin only).**
@@ -78,19 +78,19 @@ python bot.p
 
 ### Code Overview
 
-**Initialization:**
+**_Initialization_**
 
 1) Loads configuration from config.json.
 2) Connects to the SQLite database.
 3) Sets up the Discord bot with required intents.
 
-**Event Handlers:**
+**_Event Handlers_**
 
 >on_ready: **Confirms bot connection to Discord.**
 on_message: **Handles incoming messages and executes corresponding commands.**
 
 > [!NOTE]
->2. ## Commands Implementation :
+>2.**Commands Implementation**
 
 - help: 
 **Provides a list of commands and their descriptions.**
@@ -134,15 +134,15 @@ on_message: **Handles incoming messages and executes corresponding commands.**
 - search_player: 
 **Searches for players using the PandaScore API.**
 
-**UI Components:**
+**_UI Components :_**
 
->GameSelect: 
+- GameSelect: 
 **Dropdown for selecting a game to receive updates.**
 
->GameUnselect: 
+- GameUnselect: 
 **Dropdown for unselecting a game to stop receiving updates.**
 
->VoteButton: 
+-VoteButton: 
 **Button for voting on match predictions.**
 
 ## Info
