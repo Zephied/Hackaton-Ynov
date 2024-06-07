@@ -1,14 +1,10 @@
-# Discord Bot README
+# Discord Bot
 
 ## Description
-This Discord bot provides information on eSports matches, teams, and players using the PandaScore API. It supports commands for searching games, teams, and players, setting/unsetting channels to receive game updates, and changing command prefixes.
+> This Discord bot provides information on eSports matches, teams, and players using the PandaScore API. It supports commands for searching games, teams, and players, setting/unsetting channels to receive game updates, and changing command prefixes.
 
 ### Prerequisites
-Python 3.6+
-discord.py
-aiohttp
-requests
-sqlite3
+
 
 * [![Python][Python]][Python-url]
 * [![Discord][Discord]][Discord-url]
@@ -145,7 +141,8 @@ on_message: **Handles incoming messages and executes corresponding commands.**
 -VoteButton: 
 **Button for voting on match predictions.**
 
-## Info
+> [!IMPORTANT]
+>3.Info
 
 **Make sure the bot has the necessary permissions in your Discord server, especially for reading messages, sending messages, and managing channels.
 Ensure that your config.json file contains valid tokens for the Discord bot and PandaScore API.**
