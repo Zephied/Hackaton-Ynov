@@ -33,24 +33,6 @@ _json_
 }
 ```
 > [!TIP]
-> **Create and initialize the SQLite database :**
-
- _sql_ 
-```
--- database.sqlite
-CREATE TABLE SERVER_DATA (
-    serverid INTEGER PRIMARY KEY,
-    prefix TEXT
-);
-`
-CREATE TABLE GAME_DATA (
-    serverid INTEGER,
-    channelid INTEGER,
-    game TEXT,
-    PRIMARY KEY (serverid, channelid, game)
-);
-```
-> [!TIP]
 > **Running the Bot**
 >**Run the bot script using Python:**
 
