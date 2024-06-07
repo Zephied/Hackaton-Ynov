@@ -59,8 +59,8 @@ _sh_
 ```
 python bot.p
 ```
-
-### Commands
+> [!NOTE]
+>1.### Commands
 
 **General Commands**
 
@@ -90,48 +90,48 @@ python bot.p
 on_message: **Handles incoming messages and executes corresponding commands.**
 
 > [!NOTE]
->1. ## Commands Implementation :
+>2. ## Commands Implementation :
 
->help: 
+- help: 
 **Provides a list of commands and their descriptions.**
 
->setprefix: 
+- setprefix: 
 **Changes the command prefix for the server.**
 
->setchannel and unsetchannel:
+- setchannel and unsetchannel:
 **Manage channels for receiving game updates.**
 
->search: 
+- search: 
 **Searches for eSport matches based on the game name.**
 
->team: 
+- team: 
 **Searches for teams based on the team name.**
 
->player: 
+- player: 
 **Searches for players based on the player name.**
 
 
 ## Helper Functions :
 
-> search_game: 
+- search_game: 
 **Searches for games using the PandaScore API.**
 
->get_supported_games: 
+- get_supported_games: 
 **Fetches the list of supported games from PandaScore API.**
 
->get_match_info: 
+- get_match_info: 
 **Retrieves match information for a specific game.**
 
->send_match_updates: 
+- send_match_updates: 
 **Sends match updates to the specified channel.**
 
->check_match_updates: 
+- check_match_updates: 
 **Periodically checks for match updates.**
 
->search_team: 
+- search_team: 
 **Searches for teams using the PandaScore API.**
 
->search_player: 
+- search_player: 
 **Searches for players using the PandaScore API.**
 
 **UI Components:**
