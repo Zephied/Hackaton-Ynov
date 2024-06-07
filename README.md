@@ -90,8 +90,7 @@ python bot.p
 on_message: **Handles incoming messages and executes corresponding commands.**
 
 > [!NOTE]
->1. Request access to be added as a collaborator.
-## Commands Implementation :
+>1. ## Commands Implementation :
 
 >help: 
 **Provides a list of commands and their descriptions.**
