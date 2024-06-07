@@ -63,10 +63,14 @@ python bot.p
 
 **_General Commands_**
 
-<prefix>help: **Display the help message with all available commands.**
-<prefix>search <game name>: **Search for eSport matches for the specified game.**
-<prefix>team <team name>: **Search for eSport teams for the specified team name.**
-<prefix>player <player name>: **Search for eSport players for the specified player name.**
+<prefix>help : 
+**Display the help message with all available commands.**
+<prefix>search :  
+<game name>**Search for eSport matches for the specified game.**
+<prefix>team : 
+<team name>**Search for eSport teams for the specified team name.**
+<prefix>player : 
+<player name>**Search for eSport players for the specified player name.**
 
 
 **_Admin Commands_**
