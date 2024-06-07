@@ -86,47 +86,65 @@ python bot.p
 
 **Event Handlers:**
 
-on_ready: **Confirms bot connection to Discord.**
+>on_ready: **Confirms bot connection to Discord.**
 on_message: **Handles incoming messages and executes corresponding commands.**
+
+> [!IMPORTANT]
 
 ## Commands Implementation :
 
-help: **Provides a list of commands and their descriptions.**
+>help: 
+**Provides a list of commands and their descriptions.**
 
-setprefix: **Changes the command prefix for the server.**
+>setprefix: 
+**Changes the command prefix for the server.**
 
-setchannel and unsetchannel: **Manage channels for receiving game updates.**
+>setchannel and unsetchannel:
+**Manage channels for receiving game updates.**
 
-search: **Searches for eSport matches based on the game name.**
+>search: 
+**Searches for eSport matches based on the game name.**
 
-team: **Searches for teams based on the team name.**
+>team: 
+**Searches for teams based on the team name.**
 
-player: **Searches for players based on the player name.**
+>player: 
+**Searches for players based on the player name.**
 
 
 ## Helper Functions :
 
-search_game: **Searches for games using the PandaScore API.**
+> search_game: 
+**Searches for games using the PandaScore API.**
 
-get_supported_games: **Fetches the list of supported games from PandaScore API.**
+>get_supported_games: 
+**Fetches the list of supported games from PandaScore API.**
 
-get_match_info: **Retrieves match information for a specific game.**
+>get_match_info: 
+**Retrieves match information for a specific game.**
 
-send_match_updates: **Sends match updates to the specified channel.**
+>send_match_updates: 
+**Sends match updates to the specified channel.**
 
-check_match_updates: **Periodically checks for match updates.**
+>check_match_updates: 
+**Periodically checks for match updates.**
 
-search_team: **Searches for teams using the PandaScore API.**
+>search_team: 
+**Searches for teams using the PandaScore API.**
 
-search_player: **Searches for players using the PandaScore API.**
+>search_player: 
+**Searches for players using the PandaScore API.**
 
 **UI Components:**
 
-GameSelect: **Dropdown for selecting a game to receive updates.**
+>GameSelect: 
+**Dropdown for selecting a game to receive updates.**
 
-GameUnselect: **Dropdown for unselecting a game to stop receiving updates.**
+>GameUnselect: 
+**Dropdown for unselecting a game to stop receiving updates.**
 
-VoteButton: **Button for voting on match predictions.**
+>VoteButton: 
+**Button for voting on match predictions.**
 
 ## Info
 
