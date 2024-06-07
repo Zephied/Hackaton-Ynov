@@ -20,7 +20,7 @@
 
 _sh_
 ```
-pip install discord.py aiohttp request
+pip install discord.py aiohttp requests
 ```
 > [!TIP]
 > **Create a config.json file in the root directory with the following structure:**
@@ -56,7 +56,7 @@ CREATE TABLE GAME_DATA (
 
 _sh_
 ```
-python bot.p
+python bot.py
 ```
 > [!NOTE]
 >## Commands
