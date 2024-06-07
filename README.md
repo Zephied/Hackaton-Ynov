@@ -14,8 +14,8 @@
 
 
 ### Setup
-
-**Install the required libraries:**
+> [!TIP]
+> **Install the required libraries:**
 
 _sh_
 ```
