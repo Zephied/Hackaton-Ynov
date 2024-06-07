@@ -77,7 +77,7 @@ python bot.p
 
 <p align="right">(<a href="#readme-top"><strong>Back to top</strong></a>)</p>
 
-### Code Overview
+## Code Overview
 
 **_Initialization_**
 
