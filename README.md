@@ -109,60 +109,60 @@ on_message:
 >## Commands Implementation
 
 - help: 
-**Provides a list of commands and their descriptions.**
+>**Provides a list of commands and their descriptions.**
 
 - setprefix: 
-**Changes the command prefix for the server.**
+>**Changes the command prefix for the server.**
 
 - setchannel and unsetchannel:
-**Manage channels for receiving game updates.**
+>**Manage channels for receiving game updates.**
 
 - search: 
-**Searches for eSport matches based on the game name.**
+>**Searches for eSport matches based on the game name.**
 
 - team: 
-**Searches for teams based on the team name.**
+>**Searches for teams based on the team name.**
 
 - player: 
-**Searches for players based on the player name.**
+>**Searches for players based on the player name.**
 
 <p align="right">(<a href="#readme-top"><strong>Back to top</strong></a>)</p>
 
 ## Helper Functions :
 
 - search_game: 
-**Searches for games using the PandaScore API.**
+>**Searches for games using the PandaScore API.**
 
 - get_supported_games: 
-**Fetches the list of supported games from PandaScore API.**
+>**Fetches the list of supported games from PandaScore API.**
 
 - get_match_info: 
-**Retrieves match information for a specific game.**
+>**Retrieves match information for a specific game.**
 
 - send_match_updates: 
-**Sends match updates to the specified channel.**
+>**Sends match updates to the specified channel.**
 
 - check_match_updates: 
-**Periodically checks for match updates.**
+>**Periodically checks for match updates.**
 
 - search_team: 
-**Searches for teams using the PandaScore API.**
+>**Searches for teams using the PandaScore API.**
 
 - search_player: 
-**Searches for players using the PandaScore API.**
+>**Searches for players using the PandaScore API.**
 
 <p align="right">(<a href="#readme-top"><strong>Back to top</strong></a>)</p>
 
 **_UI Components :_**
 
 - GameSelect: 
-**Dropdown for selecting a game to receive updates.**
+>**Dropdown for selecting a game to receive updates.**
 
 - GameUnselect: 
-**Dropdown for unselecting a game to stop receiving updates.**
+>**Dropdown for unselecting a game to stop receiving updates.**
 
 - VoteButton: 
-**Button for voting on match predictions.**
+>**Button for voting on match predictions.**
 
 > [!IMPORTANT]
 > ## Info
