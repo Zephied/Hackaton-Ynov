@@ -22,8 +22,8 @@ _sh_
 ```
 pip install discord.py aiohttp request
 ```
-
-**Create a config.json file in the root directory with the following structure:**
+> [!TIP]
+> **Create a config.json file in the root directory with the following structure:**
 
 _json_
 ```
@@ -32,7 +32,8 @@ _json_
     "PANDASCORE_TOKEN": "your_pandascore_api_token"
 }
 ```
-**Create and initialize the SQLite database :**
+> [!TIP]
+> **Create and initialize the SQLite database :**
 
  _sql_ 
 ```
@@ -49,8 +50,9 @@ CREATE TABLE GAME_DATA (
     PRIMARY KEY (serverid, channelid, game)
 );
 ```
-**Running the Bot**
-**Run the bot script using Python:**
+> [!TIP]
+> **Running the Bot**
+>**Run the bot script using Python:**
 
 _sh_
 ```
