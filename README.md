@@ -1,14 +1,11 @@
-# Discord Bot README
+# Discord Bot
+<a name="readme-top"></a>
 
 ## Description
-This Discord bot provides information on eSports matches, teams, and players using the PandaScore API. It supports commands for searching games, teams, and players, setting/unsetting channels to receive game updates, and changing command prefixes.
+> This Discord bot provides information on eSports matches, teams, and players using the PandaScore API. It supports commands for searching games, teams, and players, setting/unsetting channels to receive game updates, and changing command prefixes.
 
 ### Prerequisites
-Python 3.6+
-discord.py
-aiohttp
-requests
-sqlite3
+
 
 * [![Python][Python]][Python-url]
 * [![Discord][Discord]][Discord-url]
@@ -18,15 +15,15 @@ sqlite3
 
 
 ### Setup
-
-**Install the required libraries:**
+> [!TIP]
+> **Install the required libraries**
 
 _sh_
 ```
-pip install discord.py aiohttp request
+pip install discord.py aiohttp requests
 ```
-
-**Create a config.json file in the root directory with the following structure:**
+> [!TIP]
+> **Create a config.json file in the root directory with the following structure:**
 
 _json_
 ```
@@ -35,117 +32,122 @@ _json_
     "PANDASCORE_TOKEN": "your_pandascore_api_token"
 }
 ```
-**Create and initialize the SQLite database :**
-
- _sql_ 
-```
--- database.sqlite
-CREATE TABLE SERVER_DATA (
-    serverid INTEGER PRIMARY KEY,
-    prefix TEXT
-);
-`
-CREATE TABLE GAME_DATA (
-    serverid INTEGER,
-    channelid INTEGER,
-    game TEXT,
-    PRIMARY KEY (serverid, channelid, game)
-);
-```
-**Running the Bot**
-**Run the bot script using Python:**
+> [!TIP]
+> **Running the Bot**
+>**Run the bot script using Python:**
 
 _sh_
 ```
-python bot.p
+python bot.py
 ```
+> [!NOTE]
+>## Commands
 
-### Commands
+**_General Commands_**
 
-**General Commands**
+help : 
+>**Display the help message with all available commands.**
 
-<prefix>help: **Display the help message with all available commands.**
-<prefix>search <game name>: **Search for eSport matches for the specified game.**
-<prefix>team <team name>: **Search for eSport teams for the specified team name.**
-<prefix>player <player name>: **Search for eSport players for the specified player name.**
+search :  
+>**Search for eSport matches for the specified game.**
+
+team : 
+>**Search for eSport teams for the specified team name.**
+
+player : 
+>**Search for eSport players for the specified player name.**
 
 
-**Admin Commands**
+**_Admin Commands_**
 
-<prefix>setprefix <new prefix>: **Change the command prefix (admin only).**
-<prefix>setchannel: **Set the current channel to receive updates for a specified game (admin only).**
-<prefix>unsetchannel: **Unset the channel for a specified game (admin only).**
+setprefix: 
+>**Change the command prefix (admin only).**
 
-### Code Overview
+setchannel: 
+>**Set the current channel to receive updates for a specified game (admin only).**
 
-**Initialization:**
+unsetchannel: 
+>**Unset the channel for a specified game (admin only).**
+
+<p align="right">(<a href="#readme-top"><strong>Back to top</strong></a>)</p>
+
+## Code Overview
+
+**_Initialization_**
 
 1) Loads configuration from config.json.
 2) Connects to the SQLite database.
 3) Sets up the Discord bot with required intents.
 
-**Event Handlers:**
+**_Event Handlers_**
 
->on_ready: **Confirms bot connection to Discord.**
-on_message: **Handles incoming messages and executes corresponding commands.**
+on_ready: 
+>**Confirms bot connection to Discord.**
+
+on_message: 
+>**Handles incoming messages and executes corresponding commands.**
 
 > [!NOTE]
->1. ## Commands Implementation :
+>## Commands Implementation
 
->help: 
-**Provides a list of commands and their descriptions.**
+- help: 
+>**Provides a list of commands and their descriptions.**
 
->setprefix: 
-**Changes the command prefix for the server.**
+- setprefix: 
+>**Changes the command prefix for the server.**
 
->setchannel and unsetchannel:
-**Manage channels for receiving game updates.**
+- setchannel and unsetchannel:
+>**Manage channels for receiving game updates.**
 
->search: 
-**Searches for eSport matches based on the game name.**
+- search: 
+>**Searches for eSport matches based on the game name.**
 
->team: 
-**Searches for teams based on the team name.**
+- team: 
+>**Searches for teams based on the team name.**
 
->player: 
-**Searches for players based on the player name.**
+- player: 
+>**Searches for players based on the player name.**
 
+<p align="right">(<a href="#readme-top"><strong>Back to top</strong></a>)</p>
 
 ## Helper Functions :
 
-> search_game: 
-**Searches for games using the PandaScore API.**
+- search_game: 
+>**Searches for games using the PandaScore API.**
 
->get_supported_games: 
-**Fetches the list of supported games from PandaScore API.**
+- get_supported_games: 
+>**Fetches the list of supported games from PandaScore API.**
 
->get_match_info: 
-**Retrieves match information for a specific game.**
+- get_match_info: 
+>**Retrieves match information for a specific game.**
 
->send_match_updates: 
-**Sends match updates to the specified channel.**
+- send_match_updates: 
+>**Sends match updates to the specified channel.**
 
->check_match_updates: 
-**Periodically checks for match updates.**
+- check_match_updates: 
+>**Periodically checks for match updates.**
 
->search_team: 
-**Searches for teams using the PandaScore API.**
+- search_team: 
+>**Searches for teams using the PandaScore API.**
 
->search_player: 
-**Searches for players using the PandaScore API.**
+- search_player: 
+>**Searches for players using the PandaScore API.**
 
-**UI Components:**
+<p align="right">(<a href="#readme-top"><strong>Back to top</strong></a>)</p>
 
->GameSelect: 
-**Dropdown for selecting a game to receive updates.**
+**_UI Components :_**
 
->GameUnselect: 
-**Dropdown for unselecting a game to stop receiving updates.**
+- GameSelect: 
+>**Dropdown for selecting a game to receive updates.**
 
->VoteButton: 
-**Button for voting on match predictions.**
+- GameUnselect: 
+>**Dropdown for unselecting a game to stop receiving updates.**
 
-## Info
+- VoteButton: 
+>**Button for voting on match predictions.**
+
+> [!IMPORTANT]
+> ## Info
 
 **Make sure the bot has the necessary permissions in your Discord server, especially for reading messages, sending messages, and managing channels.
 Ensure that your config.json file contains valid tokens for the Discord bot and PandaScore API.**
