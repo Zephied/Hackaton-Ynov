@@ -4,6 +4,7 @@ import requests
 import json
 import aiohttp
 import sqlite3
+import random
 
 with open('config.json') as f:
     config = json.load(f)
@@ -17,6 +18,9 @@ PANDASCORE_TOKEN = config['PANDASCORE_TOKEN']
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
+
+teams = {}
+max_teams = 16
 
 @client.event
 async def on_ready():
@@ -37,8 +41,12 @@ async def on_message(message):
     if message.content.startswith(prefix + 'help'):
         embed = discord.Embed(title="Commands", color=0xFF00FF)
         embed.add_field(name=f"`{prefix}help`", value="Display this help message.", inline=False)
-        embed.add_field(name=f"`{prefix}team` **`<team name>`**", value="Search for a team.", inline=False)
+        embed.add_field(name=f"`{prefix}searchteam` **`<team name>`**", value="Search for a team.", inline=False)
         embed.add_field(name=f"`{prefix}player` **`<player name>`**", value="Search for a player.", inline=False)
+        embed.add_field(name=f"`{prefix}register` **`<team name>`** **`<player1>`** **`<player2>`** ...", value="Register a team with the specified players.", inline=False)
+        embed.add_field(name=f"`{prefix}teamlist` **`<all/registered>`**", value="List all teams or only the registered teams.", inline=False)
+        embed.add_field(name=f"`{prefix}start` `**<swiss/double_elimination>**`", value="Start the tournament with the registered teams.", inline=False)
+        embed.add_field(name=f"`{prefix}ranking` `**<swiss/double_elimination>**`", value="Display the current tournament ranking.", inline=False)
         if message.author.guild_permissions.administrator:
             embed.add_field(name=f"`{prefix}setprefix` **`<new prefix>`**", value="Change the command prefix (admin only).", inline=False)
             embed.add_field(name=f"`{prefix}setchannel`", value="Set the current channel to receive updates for the specified game (admin only).", inline=False)
@@ -93,13 +101,12 @@ async def on_message(message):
         embed = discord.Embed(title=f'Command prefix changed to: {new_prefix}', color=0x00FF00)
         await message.channel.send(embed=embed)
     
-    elif message.content.startswith(prefix + 'team'):
+    elif message.content.startswith(prefix + 'searchteam'):
         if len(message.content.split(' ')) == 1:
             embed = discord.Embed(title="Please provide a team name to search for!", color=0xFF00FF)
-            embed.add_field(name="Usage", value=f"`{prefix}team <team name>`", inline=False)
+            embed.add_field(name="Usage", value=f"`{prefix}searchteam <team name>`", inline=False)
             await message.channel.send(embed=embed)
             return
-        team_name = message.content.split(' ', 1)[1]
         team_name = message.content.split(' ', 1)[1]
         embeds = await search_team(team_name)
         for embed in embeds:
@@ -116,6 +123,262 @@ async def on_message(message):
         await message.channel.send(embed=embed)
         embed = await search_player(player_name)
         await message.channel.send(embed=embed)
+
+    elif message.content.startswith(prefix + 'register'):
+        await register(message)
+
+    elif message.content.startswith(prefix + 'teamlist'):
+        await team_list(message)
+
+    elif message.content.startswith(prefix + 'start'):
+        await start_tournament(message)
+
+    elif message.content.startswith(prefix + 'ranking'):
+        if len(message.content.split()) == 1:
+            embed = discord.Embed(title="Please provide a tournament type!", color=0xFF00FF)
+            embed.add_field(name="Usage", value=f"`{prefix}ranking <swiss/double_elimination>`", inline=False)
+            await message.channel.send(embed=embed)
+            return
+        await ranking(message)
+
+async def ranking(message):
+    tournament_type = message.content.split(' ')[1]
+    if tournament_type.lower not in ['swiss', 'double_elimination']:
+        embed = discord.Embed(title="Error", color=0xFF0000)
+        embed.add_field(name="Error", value="Unrecognized tournament type. Use `swiss` or `double_elimination`.", inline=False)
+        await message.channel.send(embed=embed)
+        return
+
+    sorted_teams = sorted(teams.items(), key=lambda item: item[1]['scores'][tournament_type], reverse=True)
+    ranking_text = "\n".join([f"**{index + 1}. {team} - {data['scores'][tournament_type]} points**" for index, (team, data) in enumerate(sorted_teams)])
+    embed = discord.Embed(title=f"Ranking for {tournament_type} tournament:", color=0x00FF00)
+    embed.add_field(name="Ranking", value=ranking_text, inline=False)
+    await message.channel.send(embed=embed)
+
+
+async def start_tournament(message):
+    prefix = c.execute('SELECT prefix FROM SERVER_DATA WHERE serverid = ?', (message.guild.id,)).fetchone()[0]
+    parts = message.content.split()
+    if len(parts) != 2:
+        embed = discord.Embed(title="Usage", color=0xFF0000)
+        embed.add_field(name="Usage", value=f"`{prefix}start <swiss/double_elimination>`", inline=False)
+        await message.channel.send(embed=embed)
+        return
+
+    tournament_type = parts[1].lower()
+    if len(teams) < 2:
+        embed = discord.Embed(title="At least 2 teams are required to start a tournament.", color=0xFF0000)
+        await message.channel.send(embed=embed)
+        return
+
+    if tournament_type == 'swiss':
+        embed = discord.Embed(title="The Swiss tournament is starting!", color=0x0000FF)
+        await message.channel.send(embed=embed)
+        await round_swiss(message)
+    elif tournament_type == 'double_elimination':
+        embed = discord.Embed(title="The double elimination tournament is starting!", color=0x0000FF)
+        await message.channel.send(embed=embed)
+        await double_elimination(message)
+    else:
+        embed = discord.Embed(title="Unrecognized tournament type. Use `swiss` or `double_elimination`.", color=0xFF0000)
+        await message.channel.send(embed=embed)
+
+async def round_swiss(message):
+    team_names = list(teams.keys())
+    random.shuffle(team_names)
+
+    if len(team_names) % 2 != 0:
+        bye_team = team_names.pop()
+        embed = discord.Embed(title="Information", description=f"{bye_team} has a bye this round.", color=0x0000FF)
+        await message.channel.send(embed=embed)
+
+    round_matches = [(team_names[i], team_names[i + 1]) for i in range(0, len(team_names), 2)]
+
+    match_results = {}
+    for match in round_matches:
+
+        embed = discord.Embed(title=f"Match: {match[0]} vs {match[1]}", color=0x0000FF)
+        embed.add_field(name="Instructions", value="Please enter the score for each team (separated by a space):", inline=False)
+        await message.channel.send(embed=embed)
+        result = await client.wait_for('message', check=lambda msg: msg.author == message.author and msg.channel == message.channel)
+        scores = result.content.split()
+        if len(scores) != 2:
+            embed = discord.Embed(title="please enter two scores.", color=0xFF0000)
+            await message.channel.send(embed=embed)
+            return
+        try:
+            team1_score = int(scores[0])
+            team2_score = int(scores[1])
+        except ValueError:
+            embed = discord.Embed(title="Please enter integer scores.", color=0xFF0000)
+            await message.channel.send(embed=embed)
+            return
+
+        match_results[match] = (team1_score, team2_score)
+
+        if team1_score > team2_score:
+            teams[match[0]]['scores']['swiss'] += 1
+        elif team2_score > team1_score:
+            teams[match[1]]['scores']['swiss'] += 1
+        else:
+            teams[match[0]]['scores']['swiss'] += 0.5
+            teams[match[1]]['scores']['swiss'] += 0.5
+
+    embed = discord.Embed(title="Round results have been recorded.", color=0x0000FF)
+    await message.channel.send(embed=embed)
+
+async def double_elimination(message):
+    team_names = list(teams.keys())
+    bracket = {"winners": team_names[:], "losers": []}
+    round_num = 1
+
+    while len(bracket["winners"]) > 1 or len(bracket["losers"]) > 1:
+        embed = discord.Embed(title=f"Round {round_num} of the winners bracket:", color=0x0000FF)
+        await message.channel.send(embed=embed)
+        winners_matches = [(bracket["winners"][i], bracket["winners"][i + 1]) for i in range(0, len(bracket["winners"]), 2)]
+        winners_results = await play_matches(message, winners_matches)
+        bracket["winners"] = []
+        for match, scores in winners_results.items():
+            if scores[0] > scores[1]:
+                bracket["winners"].append(match[0])
+                bracket["losers"].append(match[1])
+            else:
+                bracket["winners"].append(match[1])
+                bracket["losers"].append(match[0])
+
+        if bracket["losers"]:
+            embed = discord.Embed(title=f"Round {round_num} of the losers bracket:", color=0x0000FF)
+            await message.channel.send(embed=embed)
+            losers_matches = [(bracket["losers"][i], bracket["losers"][i + 1] if i + 1 < len(bracket["losers"]) else None) for i in range(0, len(bracket["losers"]), 2)]
+            losers_results = await play_matches(message, losers_matches)
+            new_losers = []
+            for match, scores in losers_results.items():
+                if scores[0] > scores[1]:
+                    new_losers.append(match[0])
+                else:
+                    new_losers.append(match[1])
+            bracket["losers"] = new_losers
+
+        round_num += 1
+
+    winner = bracket["winners"][0] if bracket["winners"] else bracket["losers"][0]
+    embed = discord.Embed(title=f"Round {round_num} of the losers bracket:", color=0x0000FF)
+    await message.channel.send(embed=embed)
+    losers_matches = [(bracket["losers"][i], bracket["losers"][i + 1] if i + 1 < len(bracket["losers"]) else None) for i in range(0, len(bracket["losers"]), 2)]    
+    losers_results = await play_matches(message, losers_matches)
+    new_losers = []
+    for match, scores in losers_results.items():
+        if scores[0] > scores[1]:
+            new_losers.append(match[0])
+        else:
+            new_losers.append(match[1])
+    bracket["losers"] = new_losers
+
+    round_num += 1
+
+    winner = bracket["winners"][0] if bracket["winners"] else bracket["losers"][0]
+    embed = discord.Embed(title=f"The double elimination tournament is over! The winner is {winner}.", color=0x0000FF)
+    await message.channel.send(embed=embed)
+
+async def play_matches(message, matches):
+    match_results = {}
+    for match in matches:
+        embed = discord.Embed(title=f"Match: {match[0]} vs {match[1]}", color=0x0000FF)
+        await message.channel.send(embed=embed)
+        result = await client.wait_for('message', check=lambda msg: msg.author == message.author and msg.channel == message.channel)
+        scores = result.content.split()
+        if len(scores) != 2:
+            embed = discord.Embed(title="Please enter two scores.", color=0xFF0000)
+            await message.channel.send(embed=embed)
+            return
+        try:
+            team1_score = int(scores[0])
+            team2_score = int(scores[1])
+        except ValueError:
+            embed = discord.Embed(title="Please enter integer scores.", color=0xFF0000)
+            await message.channel.send(embed=embed)
+            return
+        match_results[match] = (team1_score, team2_score)
+    return match_results
+    
+async def ranking(message):
+    prefix = c.execute('SELECT prefix FROM SERVER_DATA WHERE serverid = ?', (message.guild.id,)).fetchone()[0]
+    parts = message.content.split()
+    if len(parts) != 2:
+        embed = discord.Embed(title="Usage", color=0xFF0000)
+        embed.add_field(name="Usage", value=f"`{prefix}ranking <swiss/double_elimination>`", inline=False)
+        await message.channel.send(embed=embed)
+        return
+
+    tournament_type = parts[1].lower()
+    if tournament_type not in ['swiss', 'double_elimination']:
+        embed = discord.Embed(title="Error", color=0xFF0000)
+        embed.add_field(name="Error", value="Unrecognized tournament type. Use `swiss` or `double_elimination`.", inline=False)
+        await message.channel.send(embed=embed)
+        return
+
+    sorted_teams = sorted(teams.items(), key=lambda item: item[1]['scores'][tournament_type], reverse=True)
+    ranking_list = "\n".join([f"**{team}**: {data['scores'][tournament_type]}" for team, data in sorted_teams])
+    embed = discord.Embed(title="Ranking", color=0x0000FF)
+    for team, data in sorted_teams:
+        embed.add_field(name=team, value=data['scores'][tournament_type], inline=False)
+    await message.channel.send(embed=embed)
+
+
+async def team_list(message):
+    prefix = c.execute('SELECT prefix FROM SERVER_DATA WHERE serverid = ?', (message.guild.id,)).fetchone()[0]
+    parts = message.content.split()
+    if len(parts) == 1 or parts[1] == 'all':
+        if not teams:
+            embed = discord.Embed(title="No teams are currently registered.", color=0xFF0000)
+            await message.channel.send(embed=embed)
+            return
+        team_list = "\n".join([f"**{team}**: {', '.join(data['players'])}" for team, data in teams.items()])
+        embed = discord.Embed(title="Registered Teams", color=0x0000FF)
+        embed.add_field(name="Teams", value=team_list, inline=False)
+        await message.channel.send(embed=embed)
+    elif parts[1] == 'members' and len(parts) == 3:
+        team_name = parts[2]
+        if team_name not in teams:
+            embed = discord.Embed(title="This team is not registered.", color=0xFF0000)
+            await message.channel.send(embed=embed)
+            return
+        players = ", ".join(teams[team_name]['players'])
+        embed = discord.Embed(title=f"Members of Team {team_name}", color=0x0000FF)
+        for team, data in teams.items():
+            if team == team_name:
+                embed.add_field(name=team, value=", ".join(data['players']), inline=False)
+        await message.channel.send(embed=embed)
+    else:
+        embed = discord.Embed(title="Help", color=0xFF00FF)
+        embed.add_field(name="Usage", value=f"Use `{prefix}team_list all` to list all teams or `{prefix}team_list members <team_name>` to list the members of a team.", inline=False)
+        await message.channel.send(embed=embed)
+
+
+async def register(message):
+    prefix = c.execute('SELECT prefix FROM SERVER_DATA WHERE serverid = ?', (message.guild.id,)).fetchone()[0]
+    parts = message.content.split()
+    if len(parts) < 3:
+        embed = discord.Embed(title="please provide a team name and at least one player!", color=0xFF0000)
+        embed.add_field(name="Usage", value=f"`{prefix}register <team name> <player1> <player2> ...`", inline=False)
+        await message.channel.send(embed=embed)
+    team_name = parts[1]
+    players = parts[2:]
+
+    if len(teams) >= max_teams:
+        embed = discord.Embed(title="The maximum number of teams has been reached.", color=0xFF0000)
+        await message.channel.send(embed=embed)
+        return
+
+    if team_name in teams:
+        embed = discord.Embed(title="This team name is already taken.", color=0xFF0000)
+        await message.channel.send(embed=embed)
+        return
+
+    teams[team_name] = {'players': players, 'scores': {'swiss': 0, 'double_elimination': 0}}
+    embed = discord.Embed(title=f"Team {team_name} has been successfully registered.", color=0x00FF00)
+    await message.channel.send(embed=embed)
+
         
 async def get_supported_games():
     url = f"https://api.pandascore.co/videogames?token={PANDASCORE_TOKEN}"
@@ -135,13 +398,13 @@ class GameUnselect(discord.ui.Select):
         self.server_id = server_id
         self.channel_id = channel_id
 
-    async def callback(self, interaction: discord.Interaction):
-        game_name = self.values[0]
-        c.execute('DELETE FROM GAME_DATA WHERE serverid = ? AND channelid = ? AND game = ?', (self.server_id, self.channel_id, game_name))
-        conn.commit()
+        async def callback(self, interaction: discord.Interaction):
+            game_name = self.values[0]
+            c.execute('DELETE FROM GAME_DATA WHERE serverid = ? AND channelid = ? AND game = ?', (self.server_id, self.channel_id, game_name))
+            conn.commit()
 
-        embed = discord.Embed(title=f'Unset this channel for updates on {game_name}.', color=0x00FF00)
-        await interaction.channel.send(embed=embed)
+            embed = discord.Embed(title=f'Unset this channel for updates on {game_name}.', color=0x00FF00)
+            await interaction.channel.send(embed=embed)
 
 class GameSelect(discord.ui.Select):
     def __init__(self, games):
@@ -230,7 +493,7 @@ async def search_player(player_name):
             embed.add_field(name=player_info['name'], value=f"ID: {player_info['id']}", inline=False)
         embeds.append(embed)
     
-    return embeds
+        return embeds
     
 async def search_team(team_name):
     url = f"https://api.pandascore.co/teams?search[name]={team_name}&token={PANDASCORE_TOKEN}"

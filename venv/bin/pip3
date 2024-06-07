@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 #!/Users/quentincontreau/developpement/Hackaton-Ynov/venv/bin/python3.12
+=======
+#!/root/amadou/dev/Hackaton-Ynov/venv/bin/python3
+>>>>>>> tournament
 # -*- coding: utf-8 -*-
 import re
 import sys
