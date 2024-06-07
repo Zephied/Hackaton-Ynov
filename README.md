@@ -1,4 +1,5 @@
 # Discord Bot
+<a name="readme-top"></a>
 
 ## Description
 > This Discord bot provides information on eSports matches, teams, and players using the PandaScore API. It supports commands for searching games, teams, and players, setting/unsetting channels to receive game updates, and changing command prefixes.
@@ -72,6 +73,8 @@ python bot.p
 <prefix>setchannel: **Set the current channel to receive updates for a specified game (admin only).**
 <prefix>unsetchannel: **Unset the channel for a specified game (admin only).**
 
+<p align="right">(<a href="#readme-top"><strong>Back to top</strong></a>)</p>
+
 ### Code Overview
 
 **_Initialization_**
@@ -83,7 +86,7 @@ python bot.p
 **_Event Handlers_**
 
 >on_ready: **Confirms bot connection to Discord.**
-on_message: **Handles incoming messages and executes corresponding commands.**
+>on_message: **Handles incoming messages and executes corresponding commands.**
 
 > [!NOTE]
 >## Commands Implementation
@@ -106,6 +109,7 @@ on_message: **Handles incoming messages and executes corresponding commands.**
 - player: 
 **Searches for players based on the player name.**
 
+<p align="right">(<a href="#readme-top"><strong>Back to top</strong></a>)</p>
 
 ## Helper Functions :
 
@@ -130,6 +134,8 @@ on_message: **Handles incoming messages and executes corresponding commands.**
 - search_player: 
 **Searches for players using the PandaScore API.**
 
+<p align="right">(<a href="#readme-top"><strong>Back to top</strong></a>)</p>
+
 **_UI Components :_**
 
 - GameSelect: 
@@ -138,7 +144,7 @@ on_message: **Handles incoming messages and executes corresponding commands.**
 - GameUnselect: 
 **Dropdown for unselecting a game to stop receiving updates.**
 
--VoteButton: 
+- VoteButton: 
 **Button for voting on match predictions.**
 
 > [!IMPORTANT]
