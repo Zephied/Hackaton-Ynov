@@ -99,8 +99,11 @@ unsetchannel:
 
 **_Event Handlers_**
 
->on_ready: **Confirms bot connection to Discord.**
->on_message: **Handles incoming messages and executes corresponding commands.**
+on_ready: 
+>**Confirms bot connection to Discord.**
+
+on_message: 
+>**Handles incoming messages and executes corresponding commands.**
 
 > [!NOTE]
 >## Commands Implementation
