@@ -141,12 +141,12 @@ Ensure that your config.json file contains valid tokens for the Discord bot and 
 [Discord]: https://img.shields.io/badge/Discord-black?style=for-the-badge&logo=discord&logoColor=lightgrey
 [Discord-url]: https://discord.com/
 
-[aiohttp]: https://img.shields.io/badge/aiohttp-grey?style=for-the-badge&logo=aiohttp&logoColor=white
+[aiohttp]: https://img.shields.io/badge/aiohttp-blue?style=for-the-badge&logo=aiohttp&logoColor=white
 [aiohttp-url]: https://docs.aiohttp.org/en/stable/
 
 
-[requests]: https://img.shields.io/badge/Requests-darkpurple?style=for-the-badge&logo=python&logoColor=yellow
+[requests]: https://img.shields.io/badge/Requests-skyblue?style=for-the-badge&logo=python&logoColor=yellow
 [requests-url]: https://www.javascript.com/
 
-[sqlite3]: https://img.shields.io/badge/SQLite-grey?style=for-the-badge&logo=sqlite&logoColor=blue
+[sqlite3]: https://img.shields.io/badge/SQLite-purple?style=for-the-badge&logo=sqlite&logoColor=blue
 [sqlite3-url]: https://www.sqlite.org/index.html
