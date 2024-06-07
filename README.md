@@ -56,7 +56,7 @@ _sh_
 python bot.p
 ```
 > [!NOTE]
->1.**Commands**
+>## Commands
 
 **_General Commands_**
 
@@ -86,7 +86,7 @@ python bot.p
 on_message: **Handles incoming messages and executes corresponding commands.**
 
 > [!NOTE]
->2.**Commands Implementation**
+>## Commands Implementation
 
 - help: 
 **Provides a list of commands and their descriptions.**
@@ -142,7 +142,7 @@ on_message: **Handles incoming messages and executes corresponding commands.**
 **Button for voting on match predictions.**
 
 > [!IMPORTANT]
->3.Info
+> ## Info
 
 **Make sure the bot has the necessary permissions in your Discord server, especially for reading messages, sending messages, and managing channels.
 Ensure that your config.json file contains valid tokens for the Discord bot and PandaScore API.**
